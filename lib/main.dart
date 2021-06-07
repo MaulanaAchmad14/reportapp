@@ -4,6 +4,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'home.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 void main() {
@@ -89,7 +91,32 @@ class _Login extends State<Login>{
   final userText = TextEditingController();
   final passwordText = TextEditingController();
 
-  get login => null;
+  void login() async {
+    String email = userText.value.text;
+    String password = passwordText.value.text;
+    final response = await http.post(Uri.parse("http://10.0.2.2:8000/api/login"),
+    headers: <String, String> {
+      'Content-Type': 'application/json'
+    },
+    body: jsonEncode(<String, String>{
+      'email': email,
+      'password': password,
+    }));
+
+    Map<String, dynamic> data = jsonDecode(response.body);
+    if(data["access_token"] != null) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString("token", data["access_token"]);
+      prefs.setInt("user_id", data["user"]["id"]);
+      prefs.setString("user_name", data["user"]["name"]);
+      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) {
+        return Home();
+      }), (Route<dynamic> route) => false);
+    } else {
+      return print("GAGAL LOGIN");
+    }
+
+  }
  
   Widget build(BuildContext context) {
     Size screen = MediaQuery.of(context).size;
@@ -109,11 +136,7 @@ class _Login extends State<Login>{
                 SizedBox(height: 15),
                 TextField(controller: passwordText, obscureText: true, decoration: InputDecoration(labelText: 'password'),),
                 SizedBox(height: 15),
-                ElevatedButton(onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return Home();
-                  }));
-                }, child: Container(
+                ElevatedButton(onPressed: login, child: Container(
                   child: Center (
                     child: Text('Login'),
                   ),

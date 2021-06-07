@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'homepage.dart';
 import 'myreport.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'main.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -19,6 +21,7 @@ class _Home extends State<Home> {
   List<Widget> elements = [
     HomePage(),
     MyReport(),
+    SizedBox(),
   ];
 
   //Here I'm going to import a list of images that we will use for the profile picture and the story
@@ -33,7 +36,7 @@ class _Home extends State<Home> {
         elevation: 0.0,
         backgroundColor: mainBlack,
         title: Text(
-          "Facebook",
+          "Reporting",
           style: TextStyle(
             color: fbBlue,
           ),
@@ -54,10 +57,18 @@ class _Home extends State<Home> {
       //Now let's work on the body
       body: elements[current_index],
       bottomNavigationBar: BottomNavigationBar(
-          onTap: (index) {
-            setState(() {
-              current_index = index;
-            });
+          onTap: (index) async {
+            if(index == 2) {
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              prefs.clear();
+              Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) {
+                return Login();
+              }), (Route<dynamic> route) => false);
+            } else {
+              setState(() {
+                current_index = index;
+              });
+            }
           },
           currentIndex: current_index,
           items: [
